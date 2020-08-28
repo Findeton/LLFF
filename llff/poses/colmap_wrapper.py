@@ -26,6 +26,7 @@ def run_colmap(basedir, match_type):
     logfile = open(logfile_name, 'w')
     
     feature_extractor_args = [
+        'xvfb-run', '-s', '"+extension GLX -screen 0 1024x768x24"',
         'colmap', 'feature_extractor', 
             '--database_path', os.path.join(basedir, 'database.db'), 
             '--image_path', os.path.join(basedir, 'images'),
