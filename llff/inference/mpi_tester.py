@@ -1,5 +1,5 @@
 import tensorflow as tf
-tf.contrib.resampler # dumb but required to get tf.contrib to load
+#tf.contrib.resampler # dumb but required to get tf.contrib to load
 import numpy as np
 import time, sys, os
 from llff.math.mpi_math import render_mpi_homogs, make_psv_homogs
@@ -21,15 +21,15 @@ class DeepIBR():
             self.Sess()
             
             # mpi_rgba, pose, newpose, min_disp, max_disp, num_depths
-            mpi_rgba = tf.placeholder(tf.float32, [None, None, None, 4], name='mpi_rgba')
-            pose = tf.placeholder(tf.float32, [3, 5], name='pose')
-            newpose = tf.placeholder(tf.float32, [3, 5], name='newpose')
-            close_depth = tf.placeholder(tf.float32, [], name='close_depth')
-            inf_depth = tf.placeholder(tf.float32, [], name='inf_depth')
+            mpi_rgba = tf.compat.v1.placeholder(tf.float32, [None, None, None, 4], name='mpi_rgba')
+            pose = tf.compat.v1.placeholder(tf.float32, [3, 5], name='pose')
+            newpose = tf.compat.v1.placeholder(tf.float32, [3, 5], name='newpose')
+            close_depth = tf.compat.v1.placeholder(tf.float32, [], name='close_depth')
+            inf_depth = tf.compat.v1.placeholder(tf.float32, [], name='inf_depth')
 
             self.run_args = [mpi_rgba, pose, newpose, close_depth, inf_depth]
 
-            self.render_args = [tf.expand_dims(mpi_rgba, 0), pose, newpose, 1./inf_depth, 1./close_depth, tf.shape(mpi_rgba)[-2]]
+            self.render_args = [tf.expand_dims(mpi_rgba, 0), pose, newpose, 1./inf_depth, 1./close_depth, tf.shape(input=mpi_rgba)[-2]]
             self.rendered_result, self.rendered_alpha, _ = render_mpi_homogs(*self.render_args)
         
         
@@ -49,10 +49,10 @@ class DeepIBR():
             self.Sess()
         
             # img, pose, newpose, dispvals, num_depths
-            img = tf.placeholder(tf.float32, [None, None, None, None], name='lfi_img')
-            pose = tf.placeholder(tf.float32, [None, 3, 5], name='lfi_pose')
-            newpose = tf.placeholder(tf.float32, [3, 5], name='lfi_newpose')
-            dispval = tf.placeholder(tf.float32, [], name='lfi_dispval')
+            img = tf.compat.v1.placeholder(tf.float32, [None, None, None, None], name='lfi_img')
+            pose = tf.compat.v1.placeholder(tf.float32, [None, 3, 5], name='lfi_pose')
+            newpose = tf.compat.v1.placeholder(tf.float32, [3, 5], name='lfi_newpose')
+            dispval = tf.compat.v1.placeholder(tf.float32, [], name='lfi_dispval')
 
             self.run_args_lf_filter = [img, pose, newpose, dispval]
 
@@ -71,19 +71,19 @@ class DeepIBR():
         
     def clearmem(self):
         self.sess.close()
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
         self.graph = tf.Graph()
         with self.graph.as_default():
-            self.sess = tf.Session()
+            self.sess = tf.compat.v1.Session()
             self.setup_renderer()
             
     def Sess(self):
         if self.sess is None:
-            config = tf.ConfigProto()
+            config = tf.compat.v1.ConfigProto()
             config.gpu_options.allow_growth = True
             config.allow_soft_placement=True
             print( 'Creating session' )
-            sess = tf.Session(config=config)
+            sess = tf.compat.v1.Session(config=config)
             self.sess = sess
         return self.sess
     
@@ -109,21 +109,21 @@ class DeepIBR():
 
             if ckpt_path is not None:
                 print( 'Restoring from',ckpt_path )
-                self.saver = tf.train.import_meta_graph(ckpt_path + '.meta')
-                t_vars = tf.trainable_variables()
+                self.saver = tf.compat.v1.train.import_meta_graph(ckpt_path + '.meta')
+                t_vars = tf.compat.v1.trainable_variables()
                 print( 'Meta restored' )
             else:
                 print( 'No checkpoint found in {}'.format(ckpt_path) )
                 return None
 
-            var_col = tf.get_collection('inputs')
+            var_col = tf.compat.v1.get_collection('inputs')
             var_col = [v for v in var_col if 'seq_to_use' not in v.name]
             print( 'Found inputs:' )
             print( [v.name for v in var_col] )
             
             self.fixvars = var_col
 
-            output_ = tf.get_collection('outputs')
+            output_ = tf.compat.v1.get_collection('outputs')
             clip_name = lambda n, s : n[:n.rfind(s)] if s in n else n
             outputs = {clip_name(clip_name(out.name, '_1'), ':0') : out for out in output_}
             print( 'Found outputs:' )
