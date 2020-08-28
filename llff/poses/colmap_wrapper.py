@@ -60,6 +60,7 @@ def run_colmap(basedir, match_type):
     #         '--Mapper.init_min_tri_angle', '4',
     # ]
     mapper_args = [
+        'xvfb-run', '-s', '+extension GLX -screen 0 1024x768x24',
         'colmap', 'mapper',
             '--database_path', os.path.join(basedir, 'database.db'),
             '--image_path', os.path.join(basedir, 'images'),
