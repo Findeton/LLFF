@@ -43,7 +43,8 @@ def run_colmap(basedir, match_type):
     exhaustive_matcher_args = [
         'xvfb-run', '-s', '+extension GLX -screen 0 1024x768x24',
         'colmap', match_type, 
-            '--database_path', os.path.join(basedir, 'database.db'), 
+            '--database_path', os.path.join(basedir, 'database.db'),
+            '--SiftMatching.use_gpu', '0',
     ]
 
     match_output = ( subprocess.check_output(exhaustive_matcher_args, universal_newlines=True) )
